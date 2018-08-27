@@ -22,8 +22,9 @@ function createWindow () {
     useContentSize: true,
     width: 1200
   })
+    mainWindow.setMenuBarVisibility(false)
 
-  mainWindow.loadURL(winURL)
+    mainWindow.loadURL(winURL)
 
   mainWindow.on('closed', () => {
     mainWindow = null

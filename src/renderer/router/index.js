@@ -8,12 +8,12 @@ export default new Router({
         {
             path: '/',
             name: 'main-page',
-            component: require('../components/MainPage.vue').default
+            component :()=> import ('../components/MainPage.vue')
         },
         {
             path: '/index',
             name: 'landing-page',
-            component: require('../components/LandingPage.vue').default
+            component:()=>import('../components/LandingPage.vue')
         },
         {
             path: '*',
