@@ -1,17 +1,27 @@
 <template>
-    <div>
-        <Tag>
-            <router-link to="/index">iview组件</router-link>
-        </Tag>
-        <Button type="primary" @click="viewRedis">连接redis</Button>
-        <Button @click="viewInfo">查看信息</Button>
-        <Tree :data="data1" :load-data="selectChange" :render="renderContent"/>
-    </div>
+    <Layout>
+        <header>
+            <Tag>
+                <router-link to="/index">iview组件</router-link>
+            </Tag>
+        </header>
+        <Content>
+            <Row>
+                <Col span="8">
+                    <Tree :data="data1" :load-data="loadTreeNodeData" :render="renderContent"/>
+                </Col>
+                <Col span="16">
+                    <div ref="redisTerminal"></div>
+                </Col>
+            </Row>
+        </Content>
+    </Layout>
 </template>
 <script>
     import Redis from 'redis'
     import os from 'os'
     import {Icon, Button} from 'iview'
+    import { Terminal } from 'xterm';
 
     let client;
     export default {
@@ -32,28 +42,34 @@
                     type: 'default',
                     size: 'small',
                 },
-                activeKeyNode:-1
+                activeKeyNode: -1
             }
+        },
+        mounted(){
+            let term = new Terminal();
+            term.open(this.$refs.redisTerminal);
         },
         methods: {
             viewRedis() {
                 client = Redis.createClient({
                     password: 123456
                 });
+                console.log(client);
             },
             viewInfo() {
                 let _this = this
 
             },
-            selectChange(node, callback) {
+            loadTreeNodeData(node, callback) {
                 let _this = this
                 let currentNode = node
-                if (currentNode.selected) return false
-                currentNode.selected = true
+                // if (currentNode.selected) return false
+                // currentNode.selected = true
                 if (currentNode.isdb) {
+                    console.log(currentNode);
                     client.select(currentNode.index, (err, res) => {
-                        console.log('select'+currentNode.index);
-                        console.log(err,res);
+                        console.log('select' + currentNode.index);
+                        console.log(err, res);
                         client.scan('0', 'match', '*', 'count', '1000', function (err, res) {
                             console.log('scan 0 match * count 100');
                             console.log(err, res);
@@ -103,22 +119,25 @@
                                 isdb: true,
                                 children: [],
                                 index: index,
-                                loading: false
+                                loading: false,
+                                keyNum: item.num
                             }))
                             callback(databases)
                         })
                     })
                 }
             },
-            clickRedisRow(data){
+            clickRedisRow(data) {
                 this.activeKeyNode = data.nodeKey
             },
             renderContent(h, {root, node, data}) {
                 let _this = this
                 let style = {display: "inline-block", width: "400px", cursor: "pointer"}
-                if(data.nodeKey === _this.activeKeyNode)style.backgroundColor = "#D5e8Fc"
+                if (data.nodeKey === _this.activeKeyNode) style.backgroundColor = "#D5e8Fc"
                 return <span style={{...style}}
-                             onClick={()=>{_this.clickRedisRow(data)}}
+                             onClick={() => {
+                                 _this.clickRedisRow(data)
+                             }}
                 >
                     <span>
                         <Icon type={data.isdb ? "md-key" : "ios-keypad"} style={{marginRight: '8px'}}/>
@@ -179,4 +198,5 @@
 </script>
 
 <style scoped lang="scss">
+    @import "~xterm/dist/xterm.css";
 </style>
