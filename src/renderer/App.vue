@@ -1,15 +1,19 @@
 <template>
-  <div id="app">
-    <router-view></router-view>
-  </div>
+    <div id="app">
+       <MainPage />
+    </div>
 </template>
 
 <script>
-  export default {
-    name: 'vueredis'
-  }
+    import MainPage from './components/MainPage'
+    export default {
+        name: 'vueredis',
+        components: {
+            MainPage
+        }
+    }
 </script>
 
 <style>
-  /* CSS */
+    /* CSS */
 </style>

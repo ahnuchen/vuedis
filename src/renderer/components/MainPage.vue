@@ -1,68 +1,85 @@
 <template>
     <Layout>
-        <header>
-            <Tag>
-                <router-link to="/index">iview组件</router-link>
-            </Tag>
+        <header class="head">
+            <Button size="small" @click="settingModal.show = true">
+                <Icon type="md-add-circle" class="add-icon"/>
+                新建连接
+            </Button>
+            <Button size="small" title="导出设置">
+                <Icon type="md-cloud-download" class="add-icon"/>
+            </Button>
+            <Button size="small" title="导入设置">
+                <Icon type="md-cloud-upload" class="add-icon"/>
+            </Button>
+            <Button size="small" class="hd-btn-right">
+                <Icon type="md-settings" class="setting-icon"/>
+                设置
+            </Button>
         </header>
-        <Content>
+        <Content style="height: 100vh;">
             <Row>
                 <Col span="8">
-                    <Tree :data="data1" :load-data="loadTreeNodeData" :render="renderContent"/>
+                    <Tree :data="$store.state.connects" :load-data="loadTreeNodeData"
+                          :render="renderContent"/>
                 </Col>
                 <Col span="16">
                     <div ref="redisTerminal"></div>
                 </Col>
             </Row>
+            <Modal
+                    v-model="settingModal.show"
+                    title="新建连接"
+                    :loading="settingModal.loading"
+                    @on-ok="asyncOK"
+                    width="800"
+            >
+                <SettingModal />
+            </Modal>
         </Content>
     </Layout>
 </template>
 <script>
-    import Redis from 'redis'
     import os from 'os'
     import {Icon, Button} from 'iview'
-    import { Terminal } from 'xterm';
-
-    let client;
+    import SettingModal from './SettingModal'
     export default {
         name: "MainPage",
-        components: {Icon, Button},
+        components: {Icon, Button, SettingModal},
         data() {
-            let _this = this
             return {
-                databases: [],
-                data1: [{
-                    title: '本地连接',
-                    expand: false,
-                    children: [],
-                    isConnect: true,
-                    loading: false
-                }],
                 buttonProps: {
                     type: 'default',
                     size: 'small',
                 },
-                activeKeyNode: -1
+                title:"新建",
+                activeKeyNode: -1,
+                databases: [],
+                settingModal: {
+                    show: true,
+                    type: 'create',
+                    title: "新建连接",
+                    loading: true
+                }
             }
         },
-        mounted(){
-            let term = new Terminal();
-            term.open(this.$refs.redisTerminal);
+        created() {
+            console.log(this.$store);
+        },
+        mounted() {
+            // let term = new Terminal();
+            // term.open(this.$refs.redisTerminal);
         },
         methods: {
-            viewRedis() {
-                client = Redis.createClient({
-                    password: 123456
-                });
-                console.log(client);
-            },
-            viewInfo() {
-                let _this = this
-
+            asyncOK() {
+                setTimeout(()=> {
+                    this.settingModal.show = false
+                },2000)
             },
             loadTreeNodeData(node, callback) {
+                console.log(node);
                 let _this = this
                 let currentNode = node
+                let {client, config} = node
                 // if (currentNode.selected) return false
                 // currentNode.selected = true
                 if (currentNode.isdb) {
@@ -86,8 +103,10 @@
                     })
                 }
                 else if (currentNode.isConnect) {
-                    if (!client) this.viewRedis();
+                    if (!client) _this.$store.commit('ACTIVE_CONNECT', {config});
                     if (_this.databases.length > 0) return false
+                    client = _this.$store.state.connects.find(c => c.config.title === config.title).client
+                    console.log(client);
                     client.info('Keyspace', function (err, res) {
                         let databases = res.split(os.EOL)
                         databases.shift()
@@ -120,7 +139,8 @@
                                 children: [],
                                 index: index,
                                 loading: false,
-                                keyNum: item.num
+                                keyNum: item.num,
+                                client
                             }))
                             callback(databases)
                         })
@@ -132,8 +152,14 @@
             },
             renderContent(h, {root, node, data}) {
                 let _this = this
-                let style = {display: "inline-block", width: "400px", cursor: "pointer"}
-                if (data.nodeKey === _this.activeKeyNode) style.backgroundColor = "#D5e8Fc"
+                let style = {
+                    display: "inline-block",
+                    width: "400px",
+                    cursor: "pointer",
+                    height: "24px",
+                    lineHeight: "24px"
+                }
+                if (data.nodeKey === _this.activeKeyNode) style.backgroundColor = "#ccf5f3"
                 return <span style={{...style}}
                              onClick={() => {
                                  _this.clickRedisRow(data)
@@ -141,26 +167,26 @@
                 >
                     <span>
                         <Icon type={data.isdb ? "md-key" : "ios-keypad"} style={{marginRight: '8px'}}/>
-                        <span>{data.title}{data.iskey && `（${data.num}）`}</span>
+                        <span>{data.isConnect ? data.config.title : data.title}{data.iskey && `（${data.num}）`}</span>
                     </span>
                     {data.isvalue && data.nodeKey === _this.activeKeyNode && <span style={{
                         display: 'inline-block', float: 'right', marginRight: '32px'
                     }}
                     >
-                        <Button style={{marginRight: '8px'}} {..._this.buttonProps} icon='ios-copy' title="复制键名"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-copy' title="复制键名"
                                 onClick={() => _this.copy(data)}/>
-                        <Button style={{marginRight: '8px'}} {..._this.buttonProps} icon='ios-trash' title="删除"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="删除"
                                 onClick={() => _this.remove(root, node, data)}/>
                     </span>}
                     {data.isdb && data.nodeKey === _this.activeKeyNode && <span style={{
                         display: 'inline-block', float: 'right', marginRight: '32px'
                     }}
                     >
-                        <Button style={{marginRight: '8px'}} {..._this.buttonProps} icon='ios-copy' title="刷新"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-copy' title="刷新"
                                 onClick={() => _this.refreshDb(data)}/>
-                        <Button style={{marginRight: '8px'}} {..._this.buttonProps} icon='ios-trash' title="添加"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="添加"
                                 onClick={() => _this.addKey(root, node, data)}/>
-                        <Button style={{marginRight: '8px'}} {..._this.buttonProps} icon='ios-trash' title="清空"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="清空"
                                 onClick={() => _this.flushDb(root, node, data)}/>
                     </span>}
 
@@ -168,11 +194,11 @@
                         display: 'inline-block', float: 'right', marginRight: '32px'
                     }}
                     >
-                        <Button style={{marginRight: '8px'}} {..._this.buttonProps} icon='ios-copy' title="刷新"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-copy' title="刷新"
                                 onClick={() => _this.refreshDb(data)}/>
-                        <Button style={{marginRight: '8px'}} {..._this.buttonProps} icon='ios-trash' title="添加"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="添加"
                                 onClick={() => _this.addKey(root, node, data)}/>
-                        <Button style={{marginRight: '8px'}} {..._this.buttonProps} icon='ios-trash' title="清空"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="清空"
                                 onClick={() => _this.flushDb(root, node, data)}/>
                     </span>}
 
@@ -196,7 +222,31 @@
         }
     }
 </script>
-
-<style scoped lang="scss">
+<style lang="scss">
     @import "~xterm/dist/xterm.css";
+    @import "../theme/index.scss";
+
+    .head {
+        padding: 2px 5px 2px 5px;
+        border-bottom: 1px solid $primary-color;
+    }
+
+    .add-icon {
+        color: $primary-color;
+    }
+
+    .setting-icon {
+        color: $warning-color;
+    }
+
+    .hd-btn-right {
+        float: right;
+    }
+
+    .option-btn {
+        color: $primary-color;
+        margin-right: 8px;
+        vertical-align: top;
+        height: 24px;
+    }
 </style>
