@@ -5,17 +5,7 @@ import Redis from 'redis'
 Vue.use(Vuex)
 
 const state = {
-    connects: [{
-        client: null,
-        config: {
-            title: '本地连接1',
-            password: 123456
-        },
-        expand: false,
-        children: [],
-        isConnect: true,
-        loading: false
-    }],
+    connects: [],
 }
 
 const mutations = {
@@ -30,8 +20,23 @@ const mutations = {
         })
     },
     DELETE_CONNECT(state, payload) {
-        let {index} = payload
-        state.connects.splice(index, 1)
+        let {root, node} = payload;
+        let dbNodeKey = node.parent
+        let connectNodeKey = root.find(item => item.nodeKey === dbNodeKey).parent
+        let connect = state.connects.find(item => item.nodeKey === connectNodeKey)
+        let db = connect.children.find(item => item.nodeKey === dbNodeKey)
+        let value,valueIndex;
+        db.children.forEach((item,index) => {
+            if(item.nodeKey === node.nodeKey){
+                value = item
+                valueIndex = index
+            }
+        })
+        connect.client.del(value.title,(err,res)=>{
+            console.log({err,res})
+        })
+        db.children.splice(valueIndex,1)
+        db.title = `${db.title.split('（')[0]}（${db.children.length}）`
     },
     CLOSE_CONNECT(state, payload) {
         let {index} = payload

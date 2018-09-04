@@ -16,14 +16,14 @@
                 设置
             </Button>
         </header>
-        <Content style="height: 100vh;">
+        <Content style="height: 100vh;font-size: 24px">
             <Row>
-                <Col span="8">
-                    <Tree :data="$store.state.connects" :load-data="loadTreeNodeData"
-                          :render="renderContent"/>
+                <Col span="8" style="height: 100vh;overflow-y: scroll;">
+                <Tree :data="$store.state.connects" :load-data="loadTreeNodeData"
+                      :render="renderContent"/>
                 </Col>
                 <Col span="16">
-                    <div ref="redisTerminal"></div>
+                <div>{{nodeValueContent}}</div>
                 </Col>
             </Row>
             <Modal
@@ -33,7 +33,7 @@
                     @on-ok="asyncOK"
                     width="800"
             >
-                <SettingModal />
+                <SettingModal/>
             </Modal>
         </Content>
     </Layout>
@@ -42,6 +42,7 @@
     import os from 'os'
     import {Icon, Button} from 'iview'
     import SettingModal from './SettingModal'
+
     export default {
         name: "MainPage",
         components: {Icon, Button, SettingModal},
@@ -51,7 +52,7 @@
                     type: 'default',
                     size: 'small',
                 },
-                title:"新建",
+                title: "新建",
                 activeKeyNode: -1,
                 databases: [],
                 settingModal: {
@@ -59,7 +60,8 @@
                     type: 'create',
                     title: "新建连接",
                     loading: true
-                }
+                },
+                nodeValueContent: ""
             }
         },
         created() {
@@ -71,9 +73,9 @@
         },
         methods: {
             asyncOK() {
-                setTimeout(()=> {
+                setTimeout(() => {
                     this.settingModal.show = false
-                },2000)
+                }, 2000)
             },
             loadTreeNodeData(node, callback) {
                 console.log(node);
@@ -82,7 +84,7 @@
                 let {client, config} = node
                 // if (currentNode.selected) return false
                 // currentNode.selected = true
-                if (currentNode.isdb) {
+                if (currentNode.isdb) {//加载db0
                     console.log(currentNode);
                     client.select(currentNode.index, (err, res) => {
                         console.log('select' + currentNode.index);
@@ -94,7 +96,7 @@
                             let cbArr = redisKeys.map(item => ({
                                 title: item,
                                 // expand: false,
-                                isvalue: true,
+                                isValue: true,
                                 keyname: item,
                                 // loading:false
                             }))
@@ -102,7 +104,7 @@
                         })
                     })
                 }
-                else if (currentNode.isConnect) {
+                else if (currentNode.isConnect) {//加载连接
                     if (!client) _this.$store.commit('ACTIVE_CONNECT', {config});
                     if (_this.databases.length > 0) return false
                     client = _this.$store.state.connects.find(c => c.config.title === config.title).client
@@ -147,8 +149,16 @@
                     })
                 }
             },
-            clickRedisRow(data) {
-                this.activeKeyNode = data.nodeKey
+            clickRedisRow({root, node}) {
+                let _this = this
+                _this.activeKeyNode = node.nodeKey
+                if (node.node.isValue) {
+                    let db = root.find(item => item.nodeKey === node.parent)
+                    db.node.client.get(node.node.title, (err, res) => {
+                        console.log({err, res})
+                        _this.nodeValueContent = res
+                    })
+                }
             },
             renderContent(h, {root, node, data}) {
                 let _this = this
@@ -162,14 +172,14 @@
                 if (data.nodeKey === _this.activeKeyNode) style.backgroundColor = "#ccf5f3"
                 return <span style={{...style}}
                              onClick={() => {
-                                 _this.clickRedisRow(data)
+                                 _this.clickRedisRow({root, node})
                              }}
                 >
                     <span>
                         <Icon type={data.isdb ? "md-key" : "ios-keypad"} style={{marginRight: '8px'}}/>
                         <span>{data.isConnect ? data.config.title : data.title}{data.iskey && `（${data.num}）`}</span>
                     </span>
-                    {data.isvalue && data.nodeKey === _this.activeKeyNode && <span style={{
+                    {data.isValue && data.nodeKey === _this.activeKeyNode && <span style={{
                         display: 'inline-block', float: 'right', marginRight: '32px'
                     }}
                     >
@@ -215,6 +225,7 @@
                 this.$Message.success('复制成功');
             },
             remove(root, node, data) {
+                this.$store.commit('DELETE_CONNECT', {root, node})
             },
             mouseKeyEvent(event) {
                 console.log(event);
