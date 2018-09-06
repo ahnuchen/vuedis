@@ -19,8 +19,10 @@
         <Content style="height: 100vh;font-size: 24px">
             <Row>
                 <Col span="8" style="height: 100vh;overflow-y: scroll;">
-                <Tree :data="$store.state.connects" :load-data="loadTreeNodeData"
-                      :render="renderContent"/>
+                <Tree :data="$store.state.connects"
+                      :render="renderContent"
+                      :load-data="loadTreeNodeData"
+                />
                 </Col>
                 <Col span="16">
                 <div>{{nodeValueContent}}</div>
@@ -54,7 +56,6 @@
                 },
                 title: "新建",
                 activeKeyNode: -1,
-                databases: [],
                 settingModal: {
                     show: true,
                     type: 'create',
@@ -77,8 +78,12 @@
                     this.settingModal.show = false
                 }, 2000)
             },
+            onToggleExpand(nodeData){
+                console.log('onToggleExpand');
+                console.log(nodeData);
+                this.$store.dispatch('onToggleExpand',nodeData)
+            },
             loadTreeNodeData(node, callback) {
-                console.log(node);
                 let _this = this
                 let currentNode = node
                 let {client, config} = node
@@ -93,20 +98,30 @@
                             console.log('scan 0 match * count 100');
                             console.log(err, res);
                             let redisKeys = res[1]
-                            let cbArr = redisKeys.map(item => ({
-                                title: item,
-                                // expand: false,
-                                isValue: true,
-                                keyname: item,
-                                // loading:false
-                            }))
+                            let cbArr = redisKeys.map(item => {
+                                let obj = {
+                                    title: item,
+                                    isValue: true,
+                                    keyname: item,
+                                    // expand: false,
+                                    // loading:false
+                                }
+                                client.type(item,(err,res)=>{
+                                    console.log({
+                                        name:item,
+                                        type:res
+                                    });
+                                    obj.type = res
+                                })
+                                return obj
+                            })
                             callback(cbArr)
                         })
                     })
                 }
                 else if (currentNode.isConnect) {//加载连接
                     if (!client) _this.$store.commit('ACTIVE_CONNECT', {config});
-                    if (_this.databases.length > 0) return false
+                    if(currentNode.children.length > 0 )return true;
                     client = _this.$store.state.connects.find(c => c.config.title === config.title).client
                     console.log(client);
                     client.info('Keyspace', function (err, res) {
@@ -115,15 +130,14 @@
                         databases.pop()
                         console.log(databases);
                         let hasKeysDatabases = {}
-
                         for (let database of databases) {
-                            // 'db0:keys=7'
                             let arr = database.split(',')
                             let key = arr[0].split(':')[0].replace('db', '')
                             hasKeysDatabases[key] = {name: arr[0].split(':')[0], num: arr[0].split('=')[1]}
                         }
                         client.config('get', 'databases', function (err, res) {
                             let dbCount = +res[1]
+                            let databases = []
                             for (let i = 0; i < dbCount; i++) {
                                 let db = {
                                     name: 'db' + i,
@@ -132,9 +146,9 @@
                                 if (hasKeysDatabases[i]) {
                                     db = hasKeysDatabases[i]
                                 }
-                                _this.databases.push(db)
+                                databases.push(db)
                             }
-                            let databases = _this.databases.map((item, index) => ({
+                            databases = databases.map((item, index) => ({
                                 title: `${item.name}（${item.num}）`,
                                 expand: false,
                                 isdb: true,

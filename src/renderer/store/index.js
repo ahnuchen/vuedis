@@ -25,17 +25,17 @@ const mutations = {
         let connectNodeKey = root.find(item => item.nodeKey === dbNodeKey).parent
         let connect = state.connects.find(item => item.nodeKey === connectNodeKey)
         let db = connect.children.find(item => item.nodeKey === dbNodeKey)
-        let value,valueIndex;
-        db.children.forEach((item,index) => {
-            if(item.nodeKey === node.nodeKey){
+        let value, valueIndex;
+        db.children.forEach((item, index) => {
+            if (item.nodeKey === node.nodeKey) {
                 value = item
                 valueIndex = index
             }
         })
-        connect.client.del(value.title,(err,res)=>{
-            console.log({err,res})
+        connect.client.del(value.title, (err, res) => {
+            console.log({err, res})
         })
-        db.children.splice(valueIndex,1)
+        db.children.splice(valueIndex, 1)
         db.title = `${db.title.split('（')[0]}（${db.children.length}）`
     },
     CLOSE_CONNECT(state, payload) {
@@ -61,7 +61,7 @@ const actions = {
             isExistsConnect.client = Redis.createClient(config)
         } else {
             try {
-                let client = Redis.createClient(config,);
+                let client = Redis.createClient(config);
                 commit("ADD_CONNECT", {client, config: {...config}})
             } catch (e) {
                 alert(e.message)
