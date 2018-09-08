@@ -1,11 +1,30 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import Redis from 'redis'
+import * as utils from '../utils/utils'
+import createLogger from 'vuex/dist/logger'
+
 
 Vue.use(Vuex)
 
 const state = {
-    connects: [],
+    connects: [{
+        client: null,
+        config: {
+            title: "默认连接",
+            address: '127.0.0.1',
+            port: '6379',
+            password: '123456'
+        },
+        expand: false,
+        children: [],
+        isConnect: true,
+        loading: false
+    }],
+    keyContents:[{
+        title:"",
+        content:""
+    }]
 }
 
 const mutations = {
@@ -19,7 +38,7 @@ const mutations = {
             loading: false
         })
     },
-    DELETE_CONNECT(state, payload) {
+    DELETE_KEY(state, payload) {
         let {root, node} = payload;
         let dbNodeKey = node.parent
         let connectNodeKey = root.find(item => item.nodeKey === dbNodeKey).parent
@@ -33,6 +52,7 @@ const mutations = {
             }
         })
         connect.client.del(value.title, (err, res) => {
+            console.log('删除key' + value.title);
             console.log({err, res})
         })
         db.children.splice(valueIndex, 1)
@@ -48,6 +68,12 @@ const mutations = {
         console.log(state);
         let isExistsConnect = state.connects.find(c => c.title = config.title)
         isExistsConnect.client = Redis.createClient(config)
+    },
+    RELOAD_DATABASE(state, {config, dbIndex, keySpaces}) {
+        let isExistsConnect = state.connects.find(c => c.title = config.title)
+        let db = isExistsConnect.children[dbIndex]
+        db.children = keySpaces
+        db.title = `${db.title.split('（')[0]}（${db.children.length}）`
     }
 }
 
@@ -67,13 +93,119 @@ const actions = {
                 alert(e.message)
             }
         }
+    },
+    refreshDb({commit, state}, node) {
+        let {node: data} = node;
+        let connect = state.connects.find(item => item.nodeKey === node.parent)
+        utils.selectAndScanDb({
+            dbIndex: data.index,
+            client: connect.client,
+            callback: function (keySpaces) {
+                commit('RELOAD_DATABASE', {
+                    config: connect.config,
+                    dbIndex: data.index,
+                    keySpaces
+                })
+            }
+        })
+    },
+    flushDb({commit, state, dispatch}, node) {
+        let {node: data} = node;
+        let connect = state.connects.find(item => item.nodeKey === node.parent)
+        connect.client.select(data.index, function (err, res) {
+            connect.client.flushdb(function (_err, _res) {
+                console.log('flushdb');
+                console.log(_err, _res);
+                if (!_err) {
+                    dispatch('refreshDb', node)
+                }
+            })
+        })
+    },
+    getKeyContent({commit, state}, {root, node}) {
+        let dbNodeKey = node.parent
+        let connectNodeKey = root.find(item => item.nodeKey === dbNodeKey).parent
+        let connect = state.connects.find(item => item.nodeKey === connectNodeKey)
+        let db = connect.children.find(item => item.nodeKey === dbNodeKey)
+        let value, valueIndex;
+        db.children.forEach((item, index) => {
+            if (item.nodeKey === node.nodeKey) {
+                value = item
+                valueIndex = index
+            }
+        })
+        let keyTitle = `${connect.config.title}::${db.title}::${value.title}`
+        let keyItem = state.keyContents.find(item => item.title === keyTitle)
+        if(keyItem)return false;
+        switch (value.type) {
+            case 'set':
+                connect.client.scard(value.title, (err, res) => {
+                    console.log(err, res);
+                })
+                connect.client.sscan(value.title, '0', 'count', '10000', (err, res) => {
+                    state.keyContents.push({
+                        title:keyTitle,
+                        content:typeof res === 'object'?JSON.stringify(res):res
+                    })
+                    console.log(err, res);
+                })
+                break;
+            case 'zset':
+                connect.client.zcard(value.title, (err, res) => {
+                    console.log(err, res);
+                })
+                connect.client.zrange(value.title,'0', '1', 'WITHSCORES', (err, res) => {
+                    console.log(err, res);
+                    state.keyContents.push({
+                        title:keyTitle,
+                        content:typeof res === 'object'?JSON.stringify(res):res
+                    })
+                })
+                break;
+            case 'hash':
+                connect.client.hlen(value.title, (err, res) => {
+                    console.log(err, res);
+                })
+                connect.client.hscan(value.title, '0', 'count', '10000', (err, res) => {
+                    console.log(err, res);
+                    state.keyContents.push({
+                        title:keyTitle,
+                        content:typeof res === 'object'?JSON.stringify(res):res
+                    })
+                })
+                break;
+            case 'list':
+                connect.client.llen(value.title, (err, res) => {
+                    console.log(err, res);
+                })
+                connect.client.lrange(value.title,'0','10', (err, res) => {
+                    console.log(err, res);
+                    state.keyContents.push({
+                        title:keyTitle,
+                        content:typeof res === 'object'?JSON.stringify(res):res
+                    })
+                })
+                break;
+            case 'string':
+                connect.client.get(value.title, (err, res) => {
+                    console.log(err, res);
+                    state.keyContents.push({
+                        title:keyTitle,
+                        content:typeof res === 'object'?JSON.stringify(res):res
+                    })
+                })
+                break;
+            default:
+                break;
+        }
     }
 }
 
 const store = new Vuex.Store({
     state,
     mutations,
-    actions
+    actions,
+    plugins: [createLogger()]
 })
 
 export default store

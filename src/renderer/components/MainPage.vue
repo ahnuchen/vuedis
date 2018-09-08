@@ -19,13 +19,15 @@
         <Content style="height: 100vh;font-size: 24px">
             <Row>
                 <Col span="8" style="height: 100vh;overflow-y: scroll;">
-                <Tree :data="$store.state.connects"
-                      :render="renderContent"
-                      :load-data="loadTreeNodeData"
-                />
+                    <Tree :data="$store.state.connects"
+                          :render="renderContent"
+                          :load-data="loadTreeNodeData"
+                    />
                 </Col>
                 <Col span="16">
-                <div>{{nodeValueContent}}</div>
+                    <Tabs type="card" closable @on-tab-remove="">
+                        <TabPane v-if="$store.state.keyContents.length > 0" v-for="item of $store.state.keyContents" :label="item.title">{{item.content}}</TabPane>
+                    </Tabs>
                 </Col>
             </Row>
             <Modal
@@ -41,13 +43,15 @@
     </Layout>
 </template>
 <script>
-    import os from 'os'
-    import {Icon, Button} from 'iview'
+    import {Icon, Button, Tag, Poptip} from 'iview'
     import SettingModal from './SettingModal'
+    import FlushDbPoptip from './FlushDbPoptip'
+    import TypeTag from './TypeTag'
+    import {selectAndScanDb, getDatabasesOfConnect} from '../utils/utils'
 
     export default {
         name: "MainPage",
-        components: {Icon, Button, SettingModal},
+        components: {Icon, Button, SettingModal, Tag,Poptip, FlushDbPoptip, TypeTag},
         data() {
             return {
                 buttonProps: {
@@ -57,7 +61,7 @@
                 title: "新建",
                 activeKeyNode: -1,
                 settingModal: {
-                    show: true,
+                    show: false,
                     type: 'create',
                     title: "新建连接",
                     loading: true
@@ -78,88 +82,31 @@
                     this.settingModal.show = false
                 }, 2000)
             },
-            onToggleExpand(nodeData){
+            onToggleExpand(nodeData) {
                 console.log('onToggleExpand');
                 console.log(nodeData);
-                this.$store.dispatch('onToggleExpand',nodeData)
+                this.$store.dispatch('onToggleExpand', nodeData)
             },
             loadTreeNodeData(node, callback) {
                 let _this = this
                 let currentNode = node
                 let {client, config} = node
-                // if (currentNode.selected) return false
-                // currentNode.selected = true
                 if (currentNode.isdb) {//加载db0
                     console.log(currentNode);
-                    client.select(currentNode.index, (err, res) => {
-                        console.log('select' + currentNode.index);
-                        console.log(err, res);
-                        client.scan('0', 'match', '*', 'count', '1000', function (err, res) {
-                            console.log('scan 0 match * count 100');
-                            console.log(err, res);
-                            let redisKeys = res[1]
-                            let cbArr = redisKeys.map(item => {
-                                let obj = {
-                                    title: item,
-                                    isValue: true,
-                                    keyname: item,
-                                    // expand: false,
-                                    // loading:false
-                                }
-                                client.type(item,(err,res)=>{
-                                    console.log({
-                                        name:item,
-                                        type:res
-                                    });
-                                    obj.type = res
-                                })
-                                return obj
-                            })
-                            callback(cbArr)
-                        })
+                    selectAndScanDb({
+                        dbIndex: currentNode.index,
+                        client,
+                        callback
                     })
                 }
                 else if (currentNode.isConnect) {//加载连接
                     if (!client) _this.$store.commit('ACTIVE_CONNECT', {config});
-                    if(currentNode.children.length > 0 )return true;
+                    if (currentNode.children.length > 0) return true;
                     client = _this.$store.state.connects.find(c => c.config.title === config.title).client
                     console.log(client);
-                    client.info('Keyspace', function (err, res) {
-                        let databases = res.split(os.EOL)
-                        databases.shift()
-                        databases.pop()
-                        console.log(databases);
-                        let hasKeysDatabases = {}
-                        for (let database of databases) {
-                            let arr = database.split(',')
-                            let key = arr[0].split(':')[0].replace('db', '')
-                            hasKeysDatabases[key] = {name: arr[0].split(':')[0], num: arr[0].split('=')[1]}
-                        }
-                        client.config('get', 'databases', function (err, res) {
-                            let dbCount = +res[1]
-                            let databases = []
-                            for (let i = 0; i < dbCount; i++) {
-                                let db = {
-                                    name: 'db' + i,
-                                    num: 0
-                                }
-                                if (hasKeysDatabases[i]) {
-                                    db = hasKeysDatabases[i]
-                                }
-                                databases.push(db)
-                            }
-                            databases = databases.map((item, index) => ({
-                                title: `${item.name}（${item.num}）`,
-                                expand: false,
-                                isdb: true,
-                                children: [],
-                                index: index,
-                                loading: false,
-                                keyNum: item.num,
-                                client
-                            }))
-                            callback(databases)
-                        })
+                    getDatabasesOfConnect({
+                        client,
+                        callback
                     })
                 }
             },
@@ -167,11 +114,7 @@
                 let _this = this
                 _this.activeKeyNode = node.nodeKey
                 if (node.node.isValue) {
-                    let db = root.find(item => item.nodeKey === node.parent)
-                    db.node.client.get(node.node.title, (err, res) => {
-                        console.log({err, res})
-                        _this.nodeValueContent = res
-                    })
+                    this.$store.dispatch('getKeyContent',{root, node})
                 }
             },
             renderContent(h, {root, node, data}) {
@@ -190,7 +133,9 @@
                              }}
                 >
                     <span>
-                        <Icon type={data.isdb ? "md-key" : "ios-keypad"} style={{marginRight: '8px'}}/>
+                        {!data.isValue &&
+                        <Icon type={data.isdb ? "md-key" : "ios-keypad"} style={{marginRight: '8px'}}/>}
+                        {data.isValue && <TypeTag type={data.type} />}
                         <span>{data.isConnect ? data.config.title : data.title}{data.iskey && `（${data.num}）`}</span>
                     </span>
                     {data.isValue && data.nodeKey === _this.activeKeyNode && <span style={{
@@ -198,7 +143,10 @@
                     }}
                     >
                         <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-copy' title="复制键名"
-                                onClick={() => _this.copy(data)}/>
+                                onClick={e => {
+                                    e.stopPropagation()
+                                    _this.copy(data)
+                                }}/>
                         <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="删除"
                                 onClick={() => _this.remove(root, node, data)}/>
                     </span>}
@@ -206,12 +154,13 @@
                         display: 'inline-block', float: 'right', marginRight: '32px'
                     }}
                     >
-                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-copy' title="刷新"
-                                onClick={() => _this.refreshDb(data)}/>
-                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="添加"
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-refresh-circle'
+                                title="刷新"
+                                onClick={() => _this.refreshDb(node)}/>
+                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='md-add-circle' title="添加"
                                 onClick={() => _this.addKey(root, node, data)}/>
-                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="清空"
-                                onClick={() => _this.flushDb(root, node, data)}/>
+                        <FlushDbPoptip node={node} />
+
                     </span>}
 
                     {data.isConnect && data.nodeKey === _this.activeKeyNode && <span style={{
@@ -228,7 +177,8 @@
 
                 </span>
             },
-            refreshDb(data) {
+            refreshDb(node) {
+                this.$store.dispatch('refreshDb', node)
             },
             addKey(data) {
             },
@@ -239,7 +189,7 @@
                 this.$Message.success('复制成功');
             },
             remove(root, node, data) {
-                this.$store.commit('DELETE_CONNECT', {root, node})
+                this.$store.commit('DELETE_KEY', {root, node})
             },
             mouseKeyEvent(event) {
                 console.log(event);
