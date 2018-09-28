@@ -25,8 +25,8 @@
                     />
                 </Col>
                 <Col span="16">
-                    <Tabs type="card" closable @on-tab-remove="">
-                        <TabPane v-if="$store.state.keyContents.length > 0" v-for="item of $store.state.keyContents" :label="item.title">{{item.content}}</TabPane>
+                    <Tabs v-if="$store.state.keyContents.length > 0" type="card" closable @on-tab-remove="removeTab">
+                        <TabPane v-for="item of $store.state.keyContents" :label="item.title">{{item.content}}</TabPane>
                     </Tabs>
                 </Col>
             </Row>
@@ -81,6 +81,9 @@
                 setTimeout(() => {
                     this.settingModal.show = false
                 }, 2000)
+            },
+            removeTab(tabIndex){
+                this.$store.commit('REMOVE_KEY_CONTENTS',tabIndex)
             },
             onToggleExpand(nodeData) {
                 console.log('onToggleExpand');

@@ -21,10 +21,7 @@ const state = {
         isConnect: true,
         loading: false
     }],
-    keyContents:[{
-        title:"",
-        content:""
-    }]
+    keyContents:[]
 }
 
 const mutations = {
@@ -74,6 +71,14 @@ const mutations = {
         let db = isExistsConnect.children[dbIndex]
         db.children = keySpaces
         db.title = `${db.title.split('（')[0]}（${db.children.length}）`
+    },
+    ADD_KEY_CONTENTS(state, content){
+        state.keyContents.push(content)
+    },
+    REMOVE_KEY_CONTENTS(state, index){
+        let contents = [...state.keyContents];
+        contents.splice(index, 1)
+        state.keyContents = contents
     }
 }
 
@@ -143,7 +148,7 @@ const actions = {
                     console.log(err, res);
                 })
                 connect.client.sscan(value.title, '0', 'count', '10000', (err, res) => {
-                    state.keyContents.push({
+                    commit('ADD_KEY_CONTENTS',{
                         title:keyTitle,
                         content:typeof res === 'object'?JSON.stringify(res):res
                     })
@@ -156,7 +161,7 @@ const actions = {
                 })
                 connect.client.zrange(value.title,'0', '1', 'WITHSCORES', (err, res) => {
                     console.log(err, res);
-                    state.keyContents.push({
+                    commit('ADD_KEY_CONTENTS',{
                         title:keyTitle,
                         content:typeof res === 'object'?JSON.stringify(res):res
                     })
@@ -168,10 +173,11 @@ const actions = {
                 })
                 connect.client.hscan(value.title, '0', 'count', '10000', (err, res) => {
                     console.log(err, res);
-                    state.keyContents.push({
+                    commit('ADD_KEY_CONTENTS',{
                         title:keyTitle,
                         content:typeof res === 'object'?JSON.stringify(res):res
                     })
+
                 })
                 break;
             case 'list':
@@ -180,16 +186,17 @@ const actions = {
                 })
                 connect.client.lrange(value.title,'0','10', (err, res) => {
                     console.log(err, res);
-                    state.keyContents.push({
+                    commit('ADD_KEY_CONTENTS',{
                         title:keyTitle,
                         content:typeof res === 'object'?JSON.stringify(res):res
                     })
+
                 })
                 break;
             case 'string':
                 connect.client.get(value.title, (err, res) => {
                     console.log(err, res);
-                    state.keyContents.push({
+                    commit('ADD_KEY_CONTENTS',{
                         title:keyTitle,
                         content:typeof res === 'object'?JSON.stringify(res):res
                     })
