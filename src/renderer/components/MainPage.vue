@@ -25,8 +25,14 @@
                     />
                 </Col>
                 <Col span="16">
-                    <Tabs v-if="$store.state.keyContents.length > 0" type="card" closable @on-tab-remove="removeTab">
-                        <TabPane v-for="item of $store.state.keyContents" :label="item.title">{{item.content}}</TabPane>
+                    <Tabs v-bind:value="$store.state.keyContents[$store.state.keyContents.length - 1].title"
+                          v-if="$store.state.keyContents.length > 0"
+                          type="card"
+                          closable
+                          @on-tab-remove="removeTab">
+                        <TabPane :name="item.title" v-for="item of $store.state.keyContents" :label="item.title">
+                            {{item.content}}
+                        </TabPane>
                     </Tabs>
                 </Col>
             </Row>
@@ -39,6 +45,16 @@
             >
                 <SettingModal/>
             </Modal>
+
+            <Modal
+                    v-model="addKeyModal.show"
+                    width="800"
+                    @on-ok="asyncAddkeyOk"
+                    :loading="addKeyModal.loading"
+            >
+
+            </Modal>
+
         </Content>
     </Layout>
 </template>
@@ -48,10 +64,11 @@
     import FlushDbPoptip from './FlushDbPoptip'
     import TypeTag from './TypeTag'
     import {selectAndScanDb, getDatabasesOfConnect} from '../utils/utils'
+    import DeleteKeyPoptip from "./DeleteKeyPoptip";
 
     export default {
         name: "MainPage",
-        components: {Icon, Button, SettingModal, Tag,Poptip, FlushDbPoptip, TypeTag},
+        components: {DeleteKeyPoptip, Icon, Button, SettingModal, Tag, Poptip, FlushDbPoptip, TypeTag},
         data() {
             return {
                 buttonProps: {
@@ -66,7 +83,11 @@
                     title: "新建连接",
                     loading: true
                 },
-                nodeValueContent: ""
+                nodeValueContent: "",
+                addKeyModal: {
+                    show: false,
+                    loading: true
+                }
             }
         },
         created() {
@@ -82,8 +103,14 @@
                     this.settingModal.show = false
                 }, 2000)
             },
-            removeTab(tabIndex){
-                this.$store.commit('REMOVE_KEY_CONTENTS',tabIndex)
+            asyncAddkeyOk() {
+                setTimeout(() => {
+                    this.addKeyModal.show = false
+                }, 2000)
+            },
+            removeTab(tabIndex) {
+                this.$store.commit('REMOVE_KEY_CONTENTS', tabIndex)
+                this.$forceUpdate()
             },
             onToggleExpand(nodeData) {
                 console.log('onToggleExpand');
@@ -117,7 +144,7 @@
                 let _this = this
                 _this.activeKeyNode = node.nodeKey
                 if (node.node.isValue) {
-                    this.$store.dispatch('getKeyContent',{root, node})
+                    this.$store.dispatch('getKeyContent', {root, node})
                 }
             },
             renderContent(h, {root, node, data}) {
@@ -138,7 +165,7 @@
                     <span>
                         {!data.isValue &&
                         <Icon type={data.isdb ? "md-key" : "ios-keypad"} style={{marginRight: '8px'}}/>}
-                        {data.isValue && <TypeTag type={data.type} />}
+                        {data.isValue && <TypeTag type={data.type}/>}
                         <span>{data.isConnect ? data.config.title : data.title}{data.iskey && `（${data.num}）`}</span>
                     </span>
                     {data.isValue && data.nodeKey === _this.activeKeyNode && <span style={{
@@ -150,8 +177,7 @@
                                     e.stopPropagation()
                                     _this.copy(data)
                                 }}/>
-                        <Button size="small" class="option-btn" {..._this.buttonProps} icon='ios-trash' title="删除"
-                                onClick={() => _this.remove(root, node, data)}/>
+                        <DeleteKeyPoptip node={node} root={root}/>
                     </span>}
                     {data.isdb && data.nodeKey === _this.activeKeyNode && <span style={{
                         display: 'inline-block', float: 'right', marginRight: '32px'
@@ -162,7 +188,7 @@
                                 onClick={() => _this.refreshDb(node)}/>
                         <Button size="small" class="option-btn" {..._this.buttonProps} icon='md-add-circle' title="添加"
                                 onClick={() => _this.addKey(root, node, data)}/>
-                        <FlushDbPoptip node={node} />
+                        <FlushDbPoptip node={node}/>
 
                     </span>}
 
@@ -184,6 +210,7 @@
                 this.$store.dispatch('refreshDb', node)
             },
             addKey(data) {
+                this.addKeyModal.show = true
             },
             flushDb(data) {
             },
@@ -191,7 +218,7 @@
                 this.$electron.clipboard.writeText(data.keyname)
                 this.$Message.success('复制成功');
             },
-            remove(root, node, data) {
+            remove(root, node) {
                 this.$store.commit('DELETE_KEY', {root, node})
             },
             mouseKeyEvent(event) {

@@ -73,7 +73,7 @@ const mutations = {
         db.title = `${db.title.split('（')[0]}（${db.children.length}）`
     },
     ADD_KEY_CONTENTS(state, content){
-        state.keyContents.push(content)
+        state.keyContents = [content]
     },
     REMOVE_KEY_CONTENTS(state, index){
         let contents = [...state.keyContents];
