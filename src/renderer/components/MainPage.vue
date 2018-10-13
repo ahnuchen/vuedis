@@ -52,7 +52,7 @@
                     @on-ok="asyncAddkeyOk"
                     :loading="addKeyModal.loading"
             >
-
+                <AddKeyModal></AddKeyModal>
             </Modal>
 
         </Content>
@@ -65,10 +65,11 @@
     import TypeTag from './TypeTag'
     import {selectAndScanDb, getDatabasesOfConnect} from '../utils/utils'
     import DeleteKeyPoptip from "./DeleteKeyPoptip";
+    import AddKeyModal from "./AddKeyModal";
 
     export default {
         name: "MainPage",
-        components: {DeleteKeyPoptip, Icon, Button, SettingModal, Tag, Poptip, FlushDbPoptip, TypeTag},
+        components: {AddKeyModal, DeleteKeyPoptip, Icon, Button, SettingModal, Tag, Poptip, FlushDbPoptip, TypeTag},
         data() {
             return {
                 buttonProps: {
