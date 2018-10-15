@@ -21,7 +21,7 @@ const state = {
         isConnect: true,
         loading: false
     }],
-    keyContents:[]
+    keyContents: []
 }
 
 const mutations = {
@@ -72,10 +72,10 @@ const mutations = {
         db.children = keySpaces
         db.title = `${db.title.split('（')[0]}（${db.children.length}）`
     },
-    ADD_KEY_CONTENTS(state, content){
+    ADD_KEY_CONTENTS(state, content) {
         state.keyContents = [content]
     },
-    REMOVE_KEY_CONTENTS(state, index){
+    REMOVE_KEY_CONTENTS(state, index) {
         let contents = [...state.keyContents];
         contents.splice(index, 1)
         state.keyContents = contents
@@ -132,6 +132,9 @@ const actions = {
         let connectNodeKey = root.find(item => item.nodeKey === dbNodeKey).parent
         let connect = state.connects.find(item => item.nodeKey === connectNodeKey)
         let db = connect.children.find(item => item.nodeKey === dbNodeKey)
+        if (connect.client.selected_db !== db.index) {
+            connect.client.select(db.index)
+        }
         let value, valueIndex;
         db.children.forEach((item, index) => {
             if (item.nodeKey === node.nodeKey) {
@@ -141,17 +144,27 @@ const actions = {
         })
         let keyTitle = `${connect.config.title}::${db.title}::${value.title}`
         let keyItem = state.keyContents.find(item => item.title === keyTitle)
-        if(keyItem)return false;
+        if (keyItem) return false;
         switch (value.type) {
             case 'set':
                 connect.client.scard(value.title, (err, res) => {
                     console.log(err, res);
                 })
                 connect.client.sscan(value.title, '0', 'count', '10000', (err, res) => {
-                    commit('ADD_KEY_CONTENTS',{
-                        title:keyTitle,
-                        content:typeof res === 'object'?JSON.stringify(res):res
+                    connect.client.ttl(value.title, (err, ttl) => {
+                        commit('ADD_KEY_CONTENTS', {
+                            title: keyTitle,
+                            content: typeof res === 'object' ? JSON.stringify(res) : res,
+                            type: value.type,
+                            keyTitle,
+                            db,
+                            value,
+                            connect,
+                            scanResult: res,
+                            ttl
+                        })
                     })
+
                     console.log(err, res);
                 })
                 break;
@@ -159,12 +172,22 @@ const actions = {
                 connect.client.zcard(value.title, (err, res) => {
                     console.log(err, res);
                 })
-                connect.client.zrange(value.title,'0', '1', 'WITHSCORES', (err, res) => {
+                connect.client.zrange(value.title, '0', '1', 'WITHSCORES', (err, res) => {
                     console.log(err, res);
-                    commit('ADD_KEY_CONTENTS',{
-                        title:keyTitle,
-                        content:typeof res === 'object'?JSON.stringify(res):res
+                    connect.client.ttl(value.title, (err, ttl) => {
+                        commit('ADD_KEY_CONTENTS', {
+                            title: keyTitle,
+                            content: typeof res === 'object' ? JSON.stringify(res) : res,
+                            type: value.type,
+                            keyTitle,
+                            db,
+                            value,
+                            connect,
+                            scanResult: res,
+                            ttl
+                        })
                     })
+
                 })
                 break;
             case 'hash':
@@ -173,10 +196,20 @@ const actions = {
                 })
                 connect.client.hscan(value.title, '0', 'count', '10000', (err, res) => {
                     console.log(err, res);
-                    commit('ADD_KEY_CONTENTS',{
-                        title:keyTitle,
-                        content:typeof res === 'object'?JSON.stringify(res):res
+                    connect.client.ttl(value.title, (err, ttl) => {
+                        commit('ADD_KEY_CONTENTS', {
+                            title: keyTitle,
+                            content: typeof res === 'object' ? JSON.stringify(res) : res,
+                            type: value.type,
+                            keyTitle,
+                            db,
+                            value,
+                            connect,
+                            scanResult: res,
+                            ttl
+                        })
                     })
+
 
                 })
                 break;
@@ -184,22 +217,42 @@ const actions = {
                 connect.client.llen(value.title, (err, res) => {
                     console.log(err, res);
                 })
-                connect.client.lrange(value.title,'0','10', (err, res) => {
+                connect.client.lrange(value.title, '0', '10', (err, res) => {
                     console.log(err, res);
-                    commit('ADD_KEY_CONTENTS',{
-                        title:keyTitle,
-                        content:typeof res === 'object'?JSON.stringify(res):res
+                    connect.client.ttl(value.title, (err, ttl) => {
+                        commit('ADD_KEY_CONTENTS', {
+                            title: keyTitle,
+                            content: typeof res === 'object' ? JSON.stringify(res) : res,
+                            type: value.type,
+                            keyTitle,
+                            db,
+                            value,
+                            connect,
+                            scanResult: res,
+                            ttl
+                        })
                     })
+
 
                 })
                 break;
             case 'string':
                 connect.client.get(value.title, (err, res) => {
                     console.log(err, res);
-                    commit('ADD_KEY_CONTENTS',{
-                        title:keyTitle,
-                        content:typeof res === 'object'?JSON.stringify(res):res
+                    connect.client.ttl(value.title, (err, ttl) => {
+                        commit('ADD_KEY_CONTENTS', {
+                            title: keyTitle,
+                            content: typeof res === 'object' ? JSON.stringify(res) : res,
+                            type: value.type,
+                            keyTitle,
+                            db,
+                            value,
+                            connect,
+                            scanResult: res,
+                            ttl
+                        })
                     })
+
                 })
                 break;
             default:

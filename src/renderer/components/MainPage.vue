@@ -16,26 +16,45 @@
                 设置
             </Button>
         </header>
-        <Content style="height: 100vh;font-size: 24px">
-            <Row>
-                <Col span="8" style="height: 100vh;overflow-y: scroll;">
+        <Content class="content">
+            <split-pane v-model="offset" @on-moving="handleMoving">
+                <div slot="left" class="pane left-pane">
                     <Tree :data="$store.state.connects"
                           :render="renderContent"
                           :load-data="loadTreeNodeData"
                     />
-                </Col>
-                <Col span="16">
+                </div>
+                <div slot="right" class="pane right-pane">
                     <Tabs v-bind:value="$store.state.keyContents[$store.state.keyContents.length - 1].title"
                           v-if="$store.state.keyContents.length > 0"
                           type="card"
                           closable
                           @on-tab-remove="removeTab">
                         <TabPane :name="item.title" v-for="item of $store.state.keyContents" :label="item.title">
-                            {{item.content}}
+                            <DataTypePanel  :panelContent="item" />
                         </TabPane>
                     </Tabs>
+                </div>
+            </split-pane>
+<!--            <Row>
+                <Col span="8" style="height: 100vh;overflow-y: scroll;">
+                <Tree :data="$store.state.connects"
+                      :render="renderContent"
+                      :load-data="loadTreeNodeData"
+                />
                 </Col>
-            </Row>
+                <Col span="16">
+                <Tabs v-bind:value="$store.state.keyContents[$store.state.keyContents.length - 1].title"
+                      v-if="$store.state.keyContents.length > 0"
+                      type="card"
+                      closable
+                      @on-tab-remove="removeTab">
+                    <TabPane :name="item.title" v-for="item of $store.state.keyContents" :label="item.title">
+                        <DataTypePanel  :panelContent="item" />
+                    </TabPane>
+                </Tabs>
+                </Col>
+            </Row>-->
             <Modal
                     v-model="settingModal.show"
                     title="新建连接"
@@ -66,10 +85,24 @@
     import {selectAndScanDb, getDatabasesOfConnect} from '../utils/utils'
     import DeleteKeyPoptip from "./DeleteKeyPoptip";
     import AddKeyModal from "./AddKeyModal";
+    import DataTypePanel from './DataTypes/DataTypePanel'
+    import SplitPane from './split-pane'
 
     export default {
         name: "MainPage",
-        components: {AddKeyModal, DeleteKeyPoptip, Icon, Button, SettingModal, Tag, Poptip, FlushDbPoptip, TypeTag},
+        components: {
+            DataTypePanel,
+            AddKeyModal,
+            DeleteKeyPoptip,
+            Icon,
+            Button,
+            SettingModal,
+            Tag,
+            Poptip,
+            FlushDbPoptip,
+            TypeTag,
+            SplitPane
+        },
         data() {
             return {
                 buttonProps: {
@@ -88,7 +121,8 @@
                 addKeyModal: {
                     show: false,
                     loading: true
-                }
+                },
+                offset:0.3
             }
         },
         created() {
@@ -99,6 +133,7 @@
             // term.open(this.$refs.redisTerminal);
         },
         methods: {
+            handleMoving(){},
             asyncOK() {
                 setTimeout(() => {
                     this.settingModal.show = false
@@ -235,8 +270,18 @@
     .head {
         padding: 2px 5px 2px 5px;
         border-bottom: 1px solid $primary-color;
+        height: 30px;
     }
-
+    .content{
+        height: calc(100vh - 30px);
+    }
+    .pane{
+        height: 100%;
+        overflow-y: scroll;
+        &.right-pane{
+            padding-left: 10px;
+        }
+    }
     .add-icon {
         color: $primary-color;
     }

@@ -19,7 +19,7 @@
                 }
             },
             root: {
-                type: Object,
+                type: Array,
                 default () {
                     return {};
                 }

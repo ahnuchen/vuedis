@@ -1,10 +1,16 @@
 <template>
-    
+    <span>set</span>
 </template>
 
 <script>
     export default {
-        name: "Set"
+        name: "Set",
+        props: {
+            panelContent: {
+                dataType: Object,
+                required: true
+            }
+        },
     }
 </script>
 

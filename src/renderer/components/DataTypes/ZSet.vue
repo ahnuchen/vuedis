@@ -1,10 +1,10 @@
-<template slot="hash">
-    <span>hash</span>
+<template>
+    <span>zset</span>
 </template>
 
 <script>
     export default {
-        name: "Hash",
+        name: "ZSet",
         props: {
             panelContent: {
                 dataType: Object,
