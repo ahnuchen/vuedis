@@ -1,4 +1,5 @@
 import os from 'os'
+
 export const selectAndScanDb = ({client, dbIndex = 0, callback}) => {
     client.select(dbIndex, (err, res) => {
         client.scan('0', 'match', '*', 'count', '1000', function (err, res) {
@@ -109,7 +110,7 @@ export const off = (function () {
  * @param {String|Number} value 要验证的字符串或数值
  * @param {*} validList 用来验证的列表
  */
-export function oneOf (value, validList) {
+export function oneOf(value, validList) {
     for (let i = 0; i < validList.length; i++) {
         if (value === validList[i]) {
             return true
@@ -117,3 +118,22 @@ export function oneOf (value, validList) {
     }
     return false
 }
+
+function cached(fn) {
+    var cache = Object.create(null);
+    return (function cachedFn(str) {
+        var hit = cache[str];
+        return hit || (cache[str] = fn(str))
+    })
+}
+
+export const tryFormatJSON = cached((jsonString) => {
+    try {
+        const o = JSON.parse(jsonString)
+        if (o && typeof o === 'object' && o !== null) {
+            return JSON.stringify(o, null, '\t')
+        }
+    } catch (e) { /**/
+    }
+    return false
+})

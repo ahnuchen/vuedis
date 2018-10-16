@@ -1,5 +1,5 @@
 <template>
-    <Tag :color="typeTags[type]">{{type}}</Tag>
+    <Tag class="type-tag" :color="typeTags[type]">{{type}}</Tag>
 </template>
 
 <script>
@@ -22,5 +22,8 @@
 </script>
 
 <style scoped>
-
+.type-tag{
+    width: 48px;
+    text-align: center;
+}
 </style>

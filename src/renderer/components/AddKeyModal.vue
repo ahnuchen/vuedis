@@ -10,7 +10,7 @@
                 </Select>
             </FormItem>
             <FormItem v-if="formValidate.type === 'zset'" label="score" prop="score">
-                <Input v-model="formValidate.score" placeholder=""></Input>
+                <InputNumber v-model="formValidate.score" placeholder=""></InputNumber>
             </FormItem>
             <FormItem v-if="formValidate.type === 'hash'" label="key" prop="key">
                 <Input v-model="formValidate.key" placeholder="" :rows="4" type="textarea"></Input>
@@ -33,7 +33,7 @@
                     name:"",
                     key:"",
                     value:"",
-                    score:0,
+                    score:1,
                     type:"string"
                 },
                 showPassword: false,
@@ -45,7 +45,7 @@
                         {required: true, message: '请输入value', trigger: 'change'}
                     ],
                     score: [
-                        {required: true, message: '请输入score', trigger: 'change'}
+                        {required: false, message: '请输入score', trigger: 'change'}
                     ],
                     name: [
                         {required: true, message: '请输入键名', trigger: 'change'}

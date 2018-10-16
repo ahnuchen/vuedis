@@ -9,6 +9,12 @@ $link-color             : #2D8cF0;
 $tooltip-color          : #fff;
 $subsidiary-color       : #808695;
 $rate-star-color        : #f5a623;
+body{
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  user-select:none;
+}
 /*
 !*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*!
 ::-webkit-scrollbar
