@@ -36,25 +36,6 @@
                     </Tabs>
                 </div>
             </split-pane>
-<!--            <Row>
-                <Col span="8" style="height: 100vh;overflow-y: scroll;">
-                <Tree :data="$store.state.connects"
-                      :render="renderContent"
-                      :load-data="loadTreeNodeData"
-                />
-                </Col>
-                <Col span="16">
-                <Tabs v-bind:value="$store.state.keyContents[$store.state.keyContents.length - 1].title"
-                      v-if="$store.state.keyContents.length > 0"
-                      type="card"
-                      closable
-                      @on-tab-remove="removeTab">
-                    <TabPane :name="item.title" v-for="item of $store.state.keyContents" :label="item.title">
-                        <DataTypePanel  :panelContent="item" />
-                    </TabPane>
-                </Tabs>
-                </Col>
-            </Row>-->
             <Modal
                     v-model="settingModal.show"
                     title="新建连接"
@@ -263,7 +244,7 @@
         }
     }
 </script>
-<style lang="scss">
+<style scoped lang="scss">
     @import "~xterm/dist/xterm.css";
     @import "../theme/index.scss";
 

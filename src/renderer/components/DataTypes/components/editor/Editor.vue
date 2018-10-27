@@ -4,7 +4,7 @@
             <span>{{valueTitle}}</span>
             <div>
                 <Label>view as:</Label>
-                <Select class="editor-select" v-model="viewAs" @on-change="viewAsChange">
+                <Select class="editor-select" v-model="viewAs">
                     <Option value="plain text">plain text</Option>
                     <Option value="json">json</Option>
                 </Select>
@@ -12,8 +12,9 @@
         </div>
         <paste-editor
                 class="editor-area"
-                v-model="panelContent.content"
+                v-model="content"
                 :viewAs="viewAs"
+                @onSave="onSave"
         />
     </div>
 </template>
@@ -32,7 +33,7 @@
             }
         },
         props: {
-            panelContent: {
+            content: {
                 dataType: Object,
                 required: true
             },
@@ -40,16 +41,15 @@
                 dataType: String,
                 required: false,
                 defaultValue: "value:"
-            }
+            },
         },
         methods: {
-            viewAsChange(v) {
-                console.log(v)
+            onSave(v){
+                this.$emit('onSave',v)
             }
         },
-        mounted(){
-            let jsonContent = tryFormatJSON(this.panelContent.content)
-            console.log({jsonContent})
+        created(){
+            let jsonContent = tryFormatJSON(this.content)
             this.$nextTick(()=>{
                 if(jsonContent){
                     this.viewAs = 'json'

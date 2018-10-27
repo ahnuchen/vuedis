@@ -154,7 +154,7 @@ const actions = {
                     connect.client.ttl(value.title, (err, ttl) => {
                         commit('ADD_KEY_CONTENTS', {
                             title: keyTitle,
-                            content: typeof res === 'object' ? JSON.stringify(res) : res,
+                            content: res,
                             type: value.type,
                             keyTitle,
                             db,
@@ -169,26 +169,25 @@ const actions = {
                 })
                 break;
             case 'zset':
-                connect.client.zcard(value.title, (err, res) => {
-                    console.log(err, res);
-                })
-                connect.client.zrange(value.title, '0', '1', 'WITHSCORES', (err, res) => {
-                    console.log(err, res);
-                    connect.client.ttl(value.title, (err, ttl) => {
-                        commit('ADD_KEY_CONTENTS', {
-                            title: keyTitle,
-                            content: typeof res === 'object' ? JSON.stringify(res) : res,
-                            type: value.type,
-                            keyTitle,
-                            db,
-                            value,
-                            connect,
-                            scanResult: res,
-                            ttl
+                connect.client.zcard(value.title, (_err, size) => {
+                    connect.client.zrange(value.title, '0', size-1, 'WITHSCORES', (err, res) => {
+                        console.log(err, res);
+                        connect.client.ttl(value.title, (err, ttl) => {
+                            commit('ADD_KEY_CONTENTS', {
+                                title: keyTitle,
+                                content: res,
+                                type: value.type,
+                                keyTitle,
+                                db,
+                                value,
+                                connect,
+                                scanResult: res,
+                                ttl
+                            })
                         })
                     })
-
                 })
+
                 break;
             case 'hash':
                 connect.client.hlen(value.title, (err, res) => {
@@ -199,7 +198,7 @@ const actions = {
                     connect.client.ttl(value.title, (err, ttl) => {
                         commit('ADD_KEY_CONTENTS', {
                             title: keyTitle,
-                            content: typeof res === 'object' ? JSON.stringify(res) : res,
+                            content: res,
                             type: value.type,
                             keyTitle,
                             db,
@@ -214,26 +213,23 @@ const actions = {
                 })
                 break;
             case 'list':
-                connect.client.llen(value.title, (err, res) => {
-                    console.log(err, res);
-                })
-                connect.client.lrange(value.title, '0', '10', (err, res) => {
-                    console.log(err, res);
-                    connect.client.ttl(value.title, (err, ttl) => {
-                        commit('ADD_KEY_CONTENTS', {
-                            title: keyTitle,
-                            content: typeof res === 'object' ? JSON.stringify(res) : res,
-                            type: value.type,
-                            keyTitle,
-                            db,
-                            value,
-                            connect,
-                            scanResult: res,
-                            ttl
+                connect.client.llen(value.title, (_err, _res) => {
+                    connect.client.lrange(value.title, '0', _res-1, (err, res) => {
+                        console.log(err, res);
+                        connect.client.ttl(value.title, (err, ttl) => {
+                            commit('ADD_KEY_CONTENTS', {
+                                title: keyTitle,
+                                content: res,
+                                type: value.type,
+                                keyTitle,
+                                db,
+                                value,
+                                connect,
+                                scanResult: res,
+                                ttl
+                            })
                         })
                     })
-
-
                 })
                 break;
             case 'string':

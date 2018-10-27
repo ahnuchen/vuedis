@@ -1,7 +1,11 @@
 <template>
-    <div class="paste-editor-wrapper">
-        <textarea ref="codemirror" class="textarea-el"></textarea>
+    <div>
+        <div class="paste-editor-wrapper">
+            <textarea ref="codemirror" class="textarea-el"></textarea>
+        </div>
+        <Button class="paste-editor-save" @click="getContentValue" size="small">保存</Button>
     </div>
+
 </template>
 <script>
     import * as CodeMirror from 'codemirror'
@@ -40,6 +44,10 @@
                     }
                 }
                 this.editor.setValue(this.value)
+            },
+            getContentValue(){
+                let v = this.editor.getValue()
+                this.$emit('onSave',v)
             }
         },
         mounted() {
@@ -61,7 +69,7 @@
         }
     }
 </script>
-<style lang="scss">
+<style scoped lang="scss">
     @import "~codemirror/lib/codemirror.css";
     .paste-editor-wrapper{
         width: 100%;
@@ -72,6 +80,8 @@
             height: 100%;
         }
     }
-
+    .paste-editor-save{
+        float: right;
+    }
 
 </style>

@@ -120,9 +120,9 @@ export function oneOf(value, validList) {
 }
 
 function cached(fn) {
-    var cache = Object.create(null);
+    let cache = Object.create(null);
     return (function cachedFn(str) {
-        var hit = cache[str];
+        let hit = cache[str];
         return hit || (cache[str] = fn(str))
     })
 }
@@ -137,3 +137,31 @@ export const tryFormatJSON = cached((jsonString) => {
     }
     return false
 })
+
+export const debounce = (func, wait, immediate) => {
+    let timeout, args, context, timestamp, result;
+    let later = function () {
+        let last = Date.now() - timestamp;
+        if (last < wait && last >= 0) {
+            timeout = setTimeout(later, wait - last);
+        } else {
+            timeout = null;
+            if (!immediate) {
+                result = func.apply(context, args);
+                if (!timeout) context = args = null;
+            }
+        }
+    };
+    return function () {
+        context = this;
+        args = arguments;
+        timestamp = Date.now();
+        let callNow = immediate && !timeout;
+        if (!timeout) timeout = setTimeout(later, wait);
+        if (callNow) {
+            result = func.apply(context, args);
+            context = args = null;
+        }
+        return result;
+    };
+}

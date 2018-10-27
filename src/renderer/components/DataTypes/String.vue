@@ -3,10 +3,11 @@
         <div class="header">
             <ActionHeader :panelContent="panelContent"/>
         </div>
-        <div class="content">
-            <Editor value-title="value:" :panelContent="panelContent"/>
+        <div class="string-content">
+            <Editor value-title="value:" :content="panelContent.content" @onSave="onSave"/>
         </div>
-        <div class="footer"></div>
+        <div class="footer">
+        </div>
     </div>
 </template>
 
@@ -25,6 +26,12 @@
                 dataType: Object,
                 required: true
             }
+        },
+        methods:{
+            onSave(value){
+                console.log('编辑器的内容');
+                console.log(value);
+            }
         }
     }
 </script>
@@ -37,7 +44,6 @@
     }
 
     .content {
-        height: 60vh;
     }
 
     .footer {
