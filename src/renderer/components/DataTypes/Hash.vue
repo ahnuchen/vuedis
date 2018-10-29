@@ -17,7 +17,7 @@
                 </Col>
             </Row>
             <Editor class="hash-key-editor" v-if="rowKey" value-title="key:" :content="rowKey" :onSave="onKeySave"/>
-            <Editor class="hash-content-editor" v-if="rowContent" value-title="value:" :content="rowContent" @onSave="onSave"/>
+            <Editor class="hash-content-editor" v-if="rowContent" value-title="value:" :content="rowContent" :onSave="onSave"/>
         </div>
         <div class="footer"></div>
     </div>

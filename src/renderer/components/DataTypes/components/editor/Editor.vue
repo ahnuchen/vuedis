@@ -45,9 +45,6 @@
             onSave:Function
         },
         methods: {
-            onSave(v){
-                this.$emit('onSave',v)
-            }
         },
         created(){
             let jsonContent = tryFormatJSON(this.content)
