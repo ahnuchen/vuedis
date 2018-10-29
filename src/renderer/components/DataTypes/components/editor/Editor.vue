@@ -46,7 +46,7 @@
         },
         methods: {
             onSave(v){
-                this.onSave(v)
+                this.$emit('onSave',v)
             }
         },
         created(){
