@@ -4,7 +4,7 @@
             <ActionHeader :panelContent="panelContent"/>
         </div>
         <div class="string-content">
-            <Editor value-title="value:" :content="panelContent.content" @onSave="onSave"/>
+            <Editor value-title="value:" :content="panelContent.content" :onSave="onSave"/>
         </div>
         <div class="footer">
         </div>

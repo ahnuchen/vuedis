@@ -16,7 +16,7 @@
                     <Page class="set-opt-btn" :total="100" :page-size="30" show-elevator/>
                 </Col>
             </Row>
-            <Editor v-if="rowContent" value-title="value:" :content="rowContent" @onSave="onSave"/>
+            <Editor v-if="rowContent" value-title="value:" :content="rowContent" :onSave="onSave"/>
         </div>
         <div class="footer"></div>
     </div>

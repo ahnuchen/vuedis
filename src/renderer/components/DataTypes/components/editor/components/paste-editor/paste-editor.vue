@@ -17,7 +17,8 @@
         name: 'PasteEditor',
         props: {
             value: String,
-            viewAs: String
+            viewAs: String,
+            onSave:Function
         },
         data() {
             return {
@@ -47,7 +48,7 @@
             },
             getContentValue(){
                 let v = this.editor.getValue()
-                this.$emit('onSave',v)
+                this.onSave(v)
             }
         },
         mounted() {

@@ -14,7 +14,7 @@
                 class="editor-area"
                 v-model="content"
                 :viewAs="viewAs"
-                @onSave="onSave"
+                :onSave="onSave"
         />
     </div>
 </template>
@@ -42,10 +42,11 @@
                 required: false,
                 defaultValue: "value:"
             },
+            onSave:Function
         },
         methods: {
             onSave(v){
-                this.$emit('onSave',v)
+                this.onSave(v)
             }
         },
         created(){

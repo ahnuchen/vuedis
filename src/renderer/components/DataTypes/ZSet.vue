@@ -20,7 +20,7 @@
                 Score:
                 <Input v-model="rowScore"/>
             </label>
-            <Editor v-if="rowContent" value-title="value:" :content="rowContent" @onSave="onSave"/>
+            <Editor v-if="rowContent" value-title="value:" :content="rowContent" :onSave="onSave"/>
         </div>
         <div class="footer"></div>
     </div>
