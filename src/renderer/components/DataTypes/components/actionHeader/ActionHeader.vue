@@ -15,7 +15,7 @@
         name: "action-header",
         props: {
             panelContent: {
-                dataType: Object,
+                type: Object,
                 required: true
             }
         },

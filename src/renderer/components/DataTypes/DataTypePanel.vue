@@ -18,7 +18,7 @@
     export default {
         props: {
             panelContent: {
-                dataType: Object,
+                type: Object,
                 required: true
             }
         },

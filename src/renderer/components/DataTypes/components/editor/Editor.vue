@@ -34,13 +34,13 @@
         },
         props: {
             content: {
-                dataType: Object,
+                type: Object,
                 required: true
             },
             valueTitle: {
-                dataType: String,
+                type: String,
                 required: false,
-                defaultValue: "value:"
+                default: "value:"
             },
             onSave:Function
         },
