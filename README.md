@@ -1,6 +1,9 @@
 # vueredis
 
 > a redis desktop manager power by  vue.js
+#### preview screenshot
+
+![vuredis](http://xue.ccy1994.top/static/images/vuredispreview.png)
 
 #### Build Setup
 
