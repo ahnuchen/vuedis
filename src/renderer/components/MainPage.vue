@@ -52,7 +52,7 @@
                     @on-ok="asyncAddkeyOk"
                     :loading="addKeyModal.loading"
             >
-                <AddKeyModal></AddKeyModal>
+                <AddKeyModal v-if="addKeyModal.show" ref="addkeyModalRef"></AddKeyModal>
             </Modal>
 
         </Content>
@@ -101,9 +101,11 @@
                 nodeValueContent: "",
                 addKeyModal: {
                     show: false,
-                    loading: true
+                    loading: true,
+                    closable:false
                 },
-                offset:0.3
+                offset:0.3,
+                addKeyDb:null//增加键值的db
             }
         },
         created() {
@@ -120,10 +122,31 @@
                     this.settingModal.show = false
                 }, 2000)
             },
-            asyncAddkeyOk() {
-                setTimeout(() => {
-                    this.addKeyModal.show = false
-                }, 2000)
+            async asyncAddkeyOk() {
+                let _this = this;
+                let keyCreateContent =await this.$refs.addkeyModalRef.handleSubmit('formValidata')
+                if(!keyCreateContent){
+                    _this.addKeyModal.loading = false;
+                    _this.$nextTick(()=>_this.addKeyModal.loading = true)//避免表单再次输入不正确，modal自动关闭
+                    return false
+                }else{
+                    _this.addKeyModal.show = false
+                    _this.$store.dispatch('addKey', {keyCreateContent,
+                        dbNode:_this.addKeyDb,
+                        onOk(res){
+                            _this.$Modal.confirm({
+                                title: '提示',
+                                content:'<p><i class="ivu-icon ivu-icon-ios-checkmark-circle" style="font-size: 32px;color: green;"></i>键已经添加，需要重新加载该数据库的键名称吗</p>',
+                                onOk(){
+                                    _this.$store.dispatch('refreshDb',_this.addKeyDb)
+                                }
+                            });
+                        },
+                        onErr:err=>{
+                            _this.$Message.error(err)
+                        }
+                    })
+                }
             },
             removeTab(tabIndex) {
                 this.$store.commit('REMOVE_KEY_CONTENTS', tabIndex)
@@ -168,7 +191,7 @@
                 let _this = this
                 let style = {
                     display: "inline-block",
-                    width: "400px",
+                    width: "300px",
                     cursor: "pointer",
                     height: "24px",
                     lineHeight: "24px"
@@ -226,8 +249,9 @@
             refreshDb(node) {
                 this.$store.dispatch('refreshDb', node)
             },
-            addKey(data) {
+            addKey(root,node,data) {
                 this.addKeyModal.show = true
+                this.addKeyDb = node;
             },
             flushDb(data) {
             },

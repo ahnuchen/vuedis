@@ -254,6 +254,67 @@ const actions = {
             default:
                 break;
         }
+    },
+    addKey({commit, state},{keyCreateContent, dbNode,onOk,onErr}){
+        console.log(keyCreateContent);
+        console.log(dbNode);
+        let {name,key,value,score,type} = keyCreateContent;
+        let {client,index} = dbNode.node;
+        if(client.selected_db !== index){
+            client.select(1)
+        }
+        switch(type){
+            case 'string':
+                client.set(name,value,(err,res)=>{
+                    console.log(err, res);
+                    if(err){
+                        onErr && onErr(err)
+                        return false;
+                    }
+                    onOk && onOk(res)
+                })
+                break;
+            case 'set':
+                client.sadd(name,value,(err,res)=>{
+                    console.log(err, res);
+                    if(err){
+                        onErr && onErr(err)
+                        return false;
+                    }
+                    onOk && onOk(res)
+                })
+                break;
+            case 'zset':
+                client.zadd(name,score,value,(err,res)=>{
+                    console.log(err, res);
+                    if(err){
+                        onErr && onErr(err)
+                        return false;
+                    }
+                    onOk && onOk(res)
+                })
+                break;
+            case 'hash':
+                client.hsetnx(name,key,value,(err,res)=>{
+                    console.log(err,res);
+                    if(err){
+                        onErr && onErr(err)
+                        return false
+                    }
+                    onOk && onOk(res)
+                })
+                break;
+            case 'list':
+                client.lpush(name,value,(err,res)=>{
+                    console.log(err,res);
+                    if(err){
+                        onErr && onErr(err)
+                        return false
+                    }
+                    onOk && onOk(res)
+                })
+                break;
+        }
     }
 }
 

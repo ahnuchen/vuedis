@@ -34,7 +34,7 @@
         },
         props: {
             content: {
-                type: Object,
+                type: String,
                 required: true
             },
             valueTitle: {

@@ -1,22 +1,22 @@
 <template>
     <div class="add-key-modal">
-        <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="80">
+        <Form ref="formValidata" :model="formValidata" :rules="ruleValidate" :label-width="80">
             <FormItem label="键名" prop="name">
-                <Input v-model="formValidate.key" placeholder=""></Input>
+                <Input v-model="formValidata.name" placeholder=""></Input>
             </FormItem>
             <FormItem label="类型" prop="type">
-                <Select v-model="formValidate.type" placeholder="" label="类型" :style="{color:typeTags[formValidate.type]}">
+                <Select v-model="formValidata.type" placeholder="" label="类型" :style="{color:typeTags[formValidata.type]}">
                     <Option v-for="item in Object.keys(typeTags)" :value="item" :style="{color:typeTags[item]}">{{item}}</Option>
                 </Select>
             </FormItem>
-            <FormItem v-if="formValidate.type === 'zset'" label="score" prop="score">
-                <InputNumber v-model="formValidate.score" placeholder=""></InputNumber>
+            <FormItem v-if="formValidata.type === 'zset'" label="score" prop="score">
+                <InputNumber v-model="formValidata.score" placeholder=""></InputNumber>
             </FormItem>
-            <FormItem v-if="formValidate.type === 'hash'" label="key" prop="key">
-                <Input v-model="formValidate.key" placeholder="" :rows="4" type="textarea"></Input>
+            <FormItem v-if="formValidata.type === 'hash'" label="key" prop="key">
+                <Input v-model="formValidata.key" placeholder="" :rows="4" type="textarea"></Input>
             </FormItem>
             <FormItem label="value" prop="value">
-                <Input v-model="formValidate.value" placeholder="" :rows="10" type="textarea"></Input>
+                <Input v-model="formValidata.value" placeholder="" :rows="10" type="textarea"></Input>
             </FormItem>
         </Form>
     </div>
@@ -29,40 +29,33 @@
         name: "AddKeyModal",
         data() {
             return {
-                formValidate: {
+                formValidata: {
                     name:"",
                     key:"",
                     value:"",
-                    score:1,
+                    score:null,
                     type:"string"
                 },
                 showPassword: false,
                 ruleValidate: {
                     key: [
-                        {required: true, message: '请输入key', trigger: 'change'}
+                        {required: true, message: '请输入key', trigger: 'blur'}
                     ],
                     value: [
-                        {required: true, message: '请输入value', trigger: 'change'}
-                    ],
-                    score: [
-                        {required: false, message: '请输入score', trigger: 'change'}
+                        {required: true, message: '请输入value', trigger: 'blur'}
                     ],
                     name: [
-                        {required: true, message: '请输入键名', trigger: 'change'}
+                        {required: true, message: '请输入键名', trigger: 'blur'}
                     ]
                 },
                 typeTags
             }
         },
         methods:{
-            handleSubmit(name) {
-                this.$refs[name].validate((valid) => {
-                    if (valid) {
-                        this.$Message.success('Success!');
-                    } else {
-                        this.$Message.error('Fail!');
-                    }
-                })
+            async handleSubmit(name) {
+                let valid = await this.$refs[name].validate()
+                if(valid)return this.formValidata
+                return valid
             },
         }
     }
