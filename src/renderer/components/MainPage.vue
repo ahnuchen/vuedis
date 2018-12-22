@@ -36,22 +36,19 @@
                     </Tabs>
                 </div>
             </split-pane>
-            <Modal
-                    v-model="settingModal.show"
+            <Modal v-model="settingModal.show"
                     title="新建连接"
                     :loading="settingModal.loading"
                     @on-ok="asyncOK"
                     width="800"
-            >
-                <SettingModal/>
+                    footer-hide>
+                <SettingModal @hideModal="settingModal.show=!settingModal.show"/>
             </Modal>
 
-            <Modal
-                    v-model="addKeyModal.show"
+            <Modal v-model="addKeyModal.show"
                     width="800"
                     @on-ok="asyncAddkeyOk"
-                    :loading="addKeyModal.loading"
-            >
+                    :loading="addKeyModal.loading">
                 <AddKeyModal v-if="addKeyModal.show" ref="addkeyModalRef"></AddKeyModal>
             </Modal>
 
