@@ -169,7 +169,7 @@
                 else if (currentNode.isConnect) {//加载连接
                     if (!client) _this.$store.commit('ACTIVE_CONNECT', {config});
                     if (currentNode.children.length > 0) return true;
-                    client = _this.$store.state.connects.find(c => c.config.title === config.title).client
+                    client = _this.$store.state.connects.find(c => c.config.host === config.host && c.config.port === config.port).client
                     console.log(client);
                     getDatabasesOfConnect({
                         client,

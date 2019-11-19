@@ -22,6 +22,10 @@ export const selectAndScanDb = ({client, dbIndex = 0, callback}) => {
 
 export const getDatabasesOfConnect = ({client, callback}) => {
     client.info('Keyspace', function (err, res) {
+        if(err){
+            console.log('get keyspace error',err.message)
+            return
+        }
         let databases = res.split(os.EOL)
         databases.shift()
         databases.pop()

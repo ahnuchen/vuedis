@@ -6,8 +6,8 @@
                     <FormItem label="连接名称" prop="title">
                         <Input v-model="formValidate.title" placeholder="输入连接名称"></Input>
                     </FormItem>
-                    <FormItem label="连接地址" prop="address">
-                        <Input v-model="formValidate.address" placeholder="输入地址"></Input>
+                    <FormItem label="连接地址" prop="host">
+                        <Input v-model="formValidate.host" placeholder="输入地址"></Input>
                     </FormItem>
                     <FormItem label="连接端口" prop="port">
                         <Input v-model="formValidate.port" placeholder="输入端口"></Input>
@@ -108,7 +108,7 @@
                 sshTestLoading: false,
                 formValidate: {
                     title: '',
-                    address: '127.0.0.1',
+                    host: '127.0.0.1',
                     password: '',
                     port: '6379'
                 },
@@ -128,7 +128,7 @@
                     title: [
                         {required: true, message: '连接名称不能为空', trigger: 'blur'}
                     ],
-                    address: [
+                    host: [
                         {required: true, message: '连接地址不能为空', trigger: 'blur'}
                     ],
                     port: [
@@ -178,7 +178,7 @@
                                     console.log('connect ready');
                                     const server = net.createServer(function (sock) {
                                         console.log('server created');
-                                        conn.forwardOut(sock.remoteAddress, sock.remotePort, _this.formValidate.address, _this.formValidate.port, (err, stream) => {
+                                        conn.forwardOut(sock.remoteAddress, sock.remotePort, _this.formValidate.host, _this.formValidate.port, (err, stream) => {
                                             console.log({err,stream});
                                             if (err) return sock.end()
                                                 sock.pipe(stream).pipe(sock)

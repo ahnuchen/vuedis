@@ -12,7 +12,7 @@ const state = {
         client: null,
         config: {
             title: "默认连接",
-            address: '127.0.0.1',
+            host: '127.0.0.1',
             port: '6379',
             password: '123456'
         },
@@ -63,11 +63,20 @@ const mutations = {
     },
     ACTIVE_CONNECT(state, {config}) {
         console.log(state);
-        let isExistsConnect = state.connects.find(c => c.title = config.title)
+        let isExistsConnect = state.connects.find(c => c.config.host === config.host && c.config.port === config.port)
         isExistsConnect.client = Redis.createClient(config)
+        console.log('isExistsConnect.client')
+        console.log(isExistsConnect.client)
+        isExistsConnect.client.on('error',function (err, res) {
+            console.info('connect error')
+            console.log({err, res})
+            isExistsConnect.client.quit()
+            isExistsConnect.loading = false
+            alert(err.message)
+        })
     },
     RELOAD_DATABASE(state, {config, dbIndex, keySpaces}) {
-        let isExistsConnect = state.connects.find(c => c.title = config.title)
+        let isExistsConnect = state.connects.find(c => c.config.host === config.host && c.config.port === config.port)
         let db = isExistsConnect.children[dbIndex]
         db.children = keySpaces
         db.title = `${db.title.split('（')[0]}（${db.children.length}）`
